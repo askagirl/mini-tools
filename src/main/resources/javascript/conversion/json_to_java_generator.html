@@ -1,0 +1,136 @@
+<html>
+<head>
+<script type="text/javascript">
+
+/*jslint white: true, devel: true, onevar: true, browser: true, undef: true, nomen: true, regexp: true, plusplus: false, bitwise: true, newcap: true, maxerr: 50, indent: 4 */
+var jsl = typeof jsl === 'undefined' ? {} : jsl;
+
+/**
+ * jsl.format - Provide json reformatting in a character-by-character approach, so that even invalid JSON may be reformatted (to the best of its ability).
+ *
+**/
+jsl.format = (function () {
+
+    function repeat(s, count) {
+        return new Array(count + 1).join(s);
+    }
+
+    function formatJson(json) {
+        var i           = 0,
+            il          = 0,
+            tab         = "    ",
+            newJson     = "",
+            indentLevel = 0,
+            inString    = false,
+            currentChar = null;
+
+        for (i = 0, il = json.length; i < il; i += 1) { 
+            currentChar = json.charAt(i);
+
+            switch (currentChar) {
+            case '{': 
+            case '[': 
+                if (!inString) { 
+                    newJson += currentChar + "\n" + repeat(tab, indentLevel + 1);
+                    indentLevel += 1; 
+                } else { 
+                    newJson += currentChar; 
+                }
+                break; 
+            case '}': 
+            case ']': 
+                if (!inString) { 
+                    indentLevel -= 1; 
+                    newJson += "\n" + repeat(tab, indentLevel) + currentChar; 
+                } else { 
+                    newJson += currentChar; 
+                } 
+                break; 
+            case ',': 
+                if (!inString) { 
+                    newJson += ",\n" + repeat(tab, indentLevel); 
+                } else { 
+                    newJson += currentChar; 
+                } 
+                break; 
+            case ':': 
+                if (!inString) { 
+                    newJson += ": "; 
+                } else { 
+                    newJson += currentChar; 
+                } 
+                break; 
+            case ' ':
+            case "\n":
+            case "\t":
+                if (inString) {
+                    newJson += currentChar;
+                }
+                break;
+            case '"': 
+                if (i > 0 && json.charAt(i - 1) !== '\\') {
+                    inString = !inString; 
+                }
+                newJson += currentChar; 
+                break;
+            default: 
+                newJson += currentChar; 
+                break;                    
+            } 
+        } 
+
+        return newJson; 
+    }
+
+    return { "formatJson": formatJson };
+
+}());
+
+function click() {
+	var json = source_form.json.value;
+	json = jsl.format.formatJson(json);
+	var variable_name = source_form.variable_name.value;
+	var properties_name = source_form.properties_name.value;
+	var sources = json.split("\n");
+	var generatedSource = "StringBuilder " + variable_name + " = new StringBuilder();\r\n";
+	for (i = 0; i < sources.length; i++) {
+		var generatedSourceLine = sources[i];
+		generatedSourceLine = generatedSourceLine.split("\"").join("\\\"");
+		generatedSource = generatedSource + variable_name + ".append(\""+ generatedSourceLine +"\");\r\n";
+	}
+	var generatedSource = generatedSource + "Map<String, Object> "+properties_name+" = (Map<String, Object>) JsonUtils.parse(buffer.toString());\r\n";
+	source_form.java.value = generatedSource;
+}
+
+function replaceAll(str, searchStr, replaceStr) {
+	while (str.indexOf(searchStr) != -1) {
+		str = str.replace(searchStr, replaceStr);
+	}
+	return str;
+}
+
+</script>
+</head>
+
+<body>
+
+<h1>JSON to Java Code</h1>
+<form name="source_form" onsubmit="return false;">
+<div>
+variable name : <input type="text" name="variable_name" value="buffer" />
+</div>
+<div>
+properties name : <input type="text" name="properties_name" value="properties" />
+</div>
+<div>
+	<textarea name="json" cols="100" rows="15"></textarea>
+</div>
+<div>
+	<textarea name="java" cols="100" rows="15"></textarea>
+</div>
+<a href="javascript:click();">»Æ¿Œ</a>
+</form>
+
+</body>
+
+</html>
