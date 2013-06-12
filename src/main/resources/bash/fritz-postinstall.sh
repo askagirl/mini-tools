@@ -4,11 +4,19 @@ sudo apt-get install vim curl git tig -y
 sudo apt-get install python-pip python-dev -y
 sudo pip install fabric fabtools
 
+touch funspace
 
-sudo useradd --create-home --password $(perl -e 'print crypt("password", "aa")') askagirl
-sudo useradd --create-home --password $(perl -e 'print crypt("password", "aa")') platform
+users=( askagirl platform )
+for user in ${users[@]}
+do
+  sudo useradd --create-home --password $(perl -e 'print crypt("password", "aa")') -s /bin/bash $user
+  sudo usermod -G platform $user
+  echo '$user ALL=(ALL) ALL' >> funspace
+done
+#echo 'platform ALL=(ALL) ALL' >> funspace
+#echo 'askagirl ALL=(ALL) NOPASSWD: APACHE' >> funspace
 
-sudo echo 'platform        ALL=(ALL)       ALL' >> /etc/sudoers
-sudo echo 'askagirl         ALL=(ALL)       NOPASSWD: APACHE' >> /etc/sudoers
-
+sudo chmod 0440 funspace
+sudo chown root.root funspace
+sudo mv funspace /etc/sudoers.d/
 mkdir ~/workspaces
