@@ -3,6 +3,7 @@ sudo apt-get install vim curl git tig -y
 # deploy only
 sudo apt-get install python-pip python-dev -y
 sudo pip install fabric fabtools
+sudo apt-get install ruby1.9.3
 
 touch funspace
 
